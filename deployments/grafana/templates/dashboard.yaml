@@ -653,7 +653,7 @@ spec:
           "pluginVersion": "11.3.0",
           "targets": [
             {
-              "expr": "(sum(authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"}) * 0.005) + (sum(authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"}) * 0.008)",
+              "expr": "(sum(authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"}) * 0.005) + (sum(authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"}) * 0.008) + (sum(authorized_hits{tier=\"enterprise\",user=~\"$user\",model=~\"$model\"}) * 0.010)",
               "instant": true,
               "refId": "A"
             }
@@ -786,13 +786,13 @@ spec:
           "pluginVersion": "11.3.0",
           "targets": [
             {
-              "expr": "topk(5, sum by (user, tier) (authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"}) * 0.005 or sum by (user, tier) (authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"}) * 0.008)",
+              "expr": "topk(5, sum by (user, tier) (authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"} * 0.005) or sum by (user, tier) (authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"} * 0.008) or sum by (user, tier) (authorized_hits{tier=\"enterprise\",user=~\"$user\",model=~\"$model\"} * 0.010))",
               "instant": true,
               "legendFormat": "{{ "{{" }}user{{ "}}" }} ({{ "{{" }}tier{{ "}}" }})",
               "refId": "A"
             }
           ],
-          "title": "💰 Top 5 Users by Cost (Free: $0.005, Premium: $0.008 per hit)",
+          "title": "💰 Top 5 Users by Cost (Free: $0.005, Premium: $0.008, Enterprise: $0.010 per token)",
           "type": "bargauge"
         },
         {
@@ -944,13 +944,13 @@ spec:
               "refId": "A"
             },
             {
-              "expr": "sum by (user, tier) ((authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"} * 0.005) or (authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"} * 0.008))",
+              "expr": "sum by (user, tier) ((authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"} * 0.005) or (authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"} * 0.008) or (authorized_hits{tier=\"enterprise\",user=~\"$user\",model=~\"$model\"} * 0.010))",
               "format": "table",
               "instant": true,
               "refId": "B"
             },
             {
-              "expr": "sum by (user, tier) ((authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"} * 0) + 0.5) or (sum by (user, tier) ((authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"} * 0) + 0.8))",
+              "expr": "(sum by (user, tier) ((authorized_hits{tier=\"free\",user=~\"$user\",model=~\"$model\"} * 0) + 0.5)) or (sum by (user, tier) ((authorized_hits{tier=\"premium\",user=~\"$user\",model=~\"$model\"} * 0) + 0.8)) or (sum by (user, tier) ((authorized_hits{tier=\"enterprise\",user=~\"$user\",model=~\"$model\"} * 0) + 1.0))",
               "format": "table",
               "instant": true,
               "refId": "C"
@@ -1179,6 +1179,276 @@ spec:
           ],
           "title": "📋 Detailed Metrics Table",
           "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "Tokens/min",
+                "drawStyle": "line",
+                "fillOpacity": 15,
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 66
+          },
+          "id": 30,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "expr": "sum by (user, tier) (rate(authorized_hits{user=~\"$user\",model=~\"$model\"}[$__rate_interval])) * 60",
+              "legendFormat": "{{ "{{" }}user{{ "}}" }} ({{ "{{" }}tier{{ "}}" }})",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "🔥 Consumo de Tokens por Usuário (tokens/min)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "unit": "reqps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 66
+          },
+          "id": 31,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "expr": "sum by (user, tier) (rate(limited_calls{user=~\"$user\"}[$__rate_interval]))",
+              "legendFormat": "{{ "{{" }}user{{ "}}" }} ({{ "{{" }}tier{{ "}}" }})",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "🚫 Requisições Bloqueadas 429 por Usuário",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "Tokens/min",
+                "drawStyle": "line",
+                "fillOpacity": 40,
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 75
+          },
+          "id": 32,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "expr": "sum by (model, tier) (rate(authorized_hits{user=~\"$user\",model=~\"$model\"}[$__rate_interval])) * 60",
+              "legendFormat": "{{ "{{" }}model{{ "}}" }} ({{ "{{" }}tier{{ "}}" }})",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "🤖 Consumo de Tokens por Modelo e Tier",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 2,
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "area"
+                }
+              },
+              "max": 1,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.05
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.2
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 75
+          },
+          "id": 33,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "11.3.0",
+          "targets": [
+            {
+              "expr": "sum by (tier) (rate(limited_calls{user=~\"$user\"}[5m])) / (sum by (tier) (rate(authorized_calls{user=~\"$user\"}[5m])) + sum by (tier) (rate(limited_calls{user=~\"$user\"}[5m])))",
+              "legendFormat": "{{ "{{" }}tier{{ "}}" }}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "📉 Taxa de Rejeição por Tier (KPI de Governança)",
+          "type": "timeseries"
         }
       ],
       "preload": false,
